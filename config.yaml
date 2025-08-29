@@ -1,0 +1,6 @@
+raw_reads_dir: "raw_reads"
+genome_url: "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/analysisSet/hg38.analysisSet.fa.gz"
+gtf_url: "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/genes/hg38.ncbiRefSeq.gtf.gz"
+
+adapter_fwd: "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA"
+adapter_rev: "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
