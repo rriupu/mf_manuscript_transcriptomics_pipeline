@@ -6,17 +6,17 @@ rule fastqc_after_trim:
         trimmed_forward = rules.trimming.output.trimmed_forward,
         trimmed_reverse = rules.trimming.output.trimmed_reverse
     output:
-        html1 = "results/qc_reports/after_trimming/{sample}/{sample}_R1_001_fastqc.html",
-        zipfile1 = "results/qc_reports/after_trimming/{sample}/{sample}_R1_001_fastqc.zip",
-        html2 = "results/qc_reports/after_trimming/{sample}/{sample}_R2_001_fastqc.html",
-        zipfile2 = "results/qc_reports/after_trimming/{sample}/{sample}_R2_001_fastqc.zip"
+        html1 = os.path.join(config["output_dir"], "qc_reports", "after_trimming", "{sample}", "{sample}_R1_001_fastqc.html"),
+        zipfile1 = os.path.join(config["output_dir"], "qc_reports", "after_trimming", "{sample}", "{sample}_R1_001_fastqc.zip"),
+        html2 = os.path.join(config["output_dir"], "qc_reports", "after_trimming", "{sample}", "{sample}_R2_001_fastqc.html"),
+        zipfile2 = os.path.join(config["output_dir"], "qc_reports", "after_trimming", "{sample}", "{sample}_R2_001_fastqc.zip")
     params:
-        wd = "results/qc_reports/after_trimming/{sample}/"
+        wd = os.path.join(config["output_dir"], "qc_reports", "after_trimming", "{sample}/")
     threads: 4
     log:
-        "logs/{sample}/{sample}_fastqc_after_trimming.log"
+        os.path.join(config["logs_dir"], "FastQC", "after_trimming", "{sample}", "{sample}_fastqc_after_trimming.log")
     benchmark:
-        "benchmarks/{sample}/{sample}_fastqc_after_trimming.txt"
+        os.path.join(config["benchmarks_dir"], "FastQC", "after_trimming", "{sample}", "{sample}_fastqc_after_trimming.txt")
     container:
         "https://depot.galaxyproject.org/singularity/fastqc%3A0.12.1--hdfd78af_0"
     shell:
@@ -40,14 +40,14 @@ rule multiqc_after_trim:
     input:
         expand(rules.fastqc_after_trim.output.html1, sample = SAMPLES)
     output:
-        report = "results/qc_reports/after_trimming/multiqc_report.html"
+        report = os.path.join(config["output_dir"], "qc_reports", "after_trimming", "multiqc_report.html")
     params:
-        wd = "results/qc_reports/after_trimming/"
+        wd = os.path.join(config["output_dir"], "qc_reports", "after_trimming/")
     threads: 1
     log:
-        "logs/multiqc/after_trimming.log"
+        os.path.join(config["logs_dir"], "multiqc", "after_trimming.log")
     benchmark:
-        "benchmarks/multiqc/after_trimming.txt"
+        os.path.join(config["benchmarks_dir"], "multiqc", "after_trimming.txt")
     container:
         "docker://multiqc/multiqc:v1.29"
     shell:

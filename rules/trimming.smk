@@ -6,16 +6,16 @@ rule trimming:
         forward_read = os.path.join(config["raw_reads_dir"], "{sample}_R1_001.fastq.gz"),
         reverse_read = os.path.join(config["raw_reads_dir"], "{sample}_R2_001.fastq.gz")
     output:
-        trimmed_forward = "results/trimmed_reads/{sample}/{sample}_R1.fastq.gz",
-        trimmed_reverse = "results/trimmed_reads/{sample}/{sample}_R2.fastq.gz"
+        trimmed_forward = os.path.join(config["output_dir"], "trimmed_reads", "{sample}", "{sample}_R1.fastq.gz"),
+        trimmed_reverse = os.path.join(config["output_dir"], "trimmed_reads", "{sample}", "{sample}_R2.fastq.gz")
     params:
         adapter_fwd = config["adapter_fwd"],
         adapter_rev = config["adapter_rev"]
     threads: 4
     log:
-        "logs/{sample}/{sample}_trimming.log"
+        os.path.join(config["logs_dir"], "trimming", "{sample}", "{sample}_trimming.log")
     benchmark:
-        "benchmarks/{sample}/{sample}_trimming.txt"
+        os.path.join(config["benchmarks_dir"], "trimming", "{sample}", "{sample}_trimming.txt")
     container:
         "docker://pipecraft/cutadapt:4.4"
     shell:
@@ -31,5 +31,6 @@ rule trimming:
         	--quality-cutoff=20 \
         	--cores={threads} \
         	{input.forward_read} \
-        	{input.reverse_read}
+        	{input.reverse_read} \
+        2> {log}
         """

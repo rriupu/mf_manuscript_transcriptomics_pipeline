@@ -1,0 +1,8 @@
+.snakemake/
+.cache/
+.java/
+raw_data/
+gene_counts/
+fastqc/
+dockerfiles/
+scripts/

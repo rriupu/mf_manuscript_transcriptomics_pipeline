@@ -3,14 +3,14 @@ rule get_genome:
     Get the genome fasta file.
     """
     output:
-        genome_fasta = os.path.join("data", "genome", os.path.splitext(os.path.basename(config["genome_url"]))[0])
+        genome_fasta = os.path.join(config["data_dir"], "genome", os.path.splitext(os.path.basename(config["genome_url"]))[0])
     params:
         genome_url = config["genome_url"]
     threads: 1
     log:
-        "logs/genome_download/download.log"
+        os.path.join(config["logs_dir"], "genome_download", "download.log")
     benchmark:
-        "benchmarks/genome_download/download.txt"
+        os.path.join(config["benchmarks_dir"], "genome_download", "download.txt")
     shell:
         """
         wget -O - {params.genome_url} \
@@ -24,14 +24,14 @@ rule get_gtf:
     Get GTF file with gene annotations.
     """
     output:
-        gtf_file = os.path.join("data", "annotations", "hg38.ncbiRefSeq.gtf")
+        gtf_file = os.path.join(config["data_dir"], "annotations", "hg38.ncbiRefSeq.gtf")
     params:
         gtf_url = config["gtf_url"]
     threads: 1
     log:
-        "logs/get_gtf/get_gtf.log"
+        os.path.join(config["logs_dir"], "get_gtf", "get_gtf.log")
     benchmark:
-        "benchmarks/get_gtf/get_gtf.txt"
+        os.path.join(config["benchmarks_dir"], "get_gtf", "get_gtf.txt")
     shell:
         """
         wget -O - {params.gtf_url} \
@@ -50,12 +50,12 @@ rule genome_indexing:
     output:
         touch("data/genome/indexing_done")
     params:
-        genome_dir = os.path.join("data", "star_index")
+        genome_dir = os.path.join(config["data_dir"], "star_index")
     threads: 10
     log:
-        "logs/genome_indexing/indexing.log"
+        os.path.join(config["logs_dir"], "genome_indexing", "indexing.log")
     benchmark:
-        "benchmarks/genome_indexing/indexing.log"
+        os.path.join(config["benchmarks_dir"], "genome_indexing", "indexing.log")
     container:
         "docker://mgibio/star:2.7.0f"
     shell:
@@ -66,7 +66,8 @@ rule genome_indexing:
             --genomeDir {params.genome_dir} \
             --genomeFastaFiles {input.genome_fasta} \
             --sjdbGTFfile {input.gtf_file} \
-            --sjdbOverhang ReadLength-1
+            --sjdbOverhang ReadLength-1 \
+        2> {log}
         """
 
 rule star_alignment:
@@ -80,12 +81,12 @@ rule star_alignment:
     output:
         aligned_reads = os.path.join("results", "aligned_reads", "{sample}", "{sample}_Aligned.sortedByCoord.out.bam")
     params:
-        genome_dir = os.path.join("data", "star_index")
+        genome_dir = os.path.join(config["data_dir"], "star_index")
     threads: 8
     log:
-        "logs/{sample}/{sample}_star_mapping.log"
+        os.path.join(config["logs_dir"], "mapping", "{sample}", "{sample}_star_mapping.log")
     benchmark:
-        "benchmarks/{sample}/{sample}_star_mapping.log"
+        os.path.join(config["benchmarks_dir"], "mapping", "{sample}", "{sample}_star_mapping.log")
     container:
         "docker://mgibio/star:2.7.0f"
     shell:
@@ -98,5 +99,6 @@ rule star_alignment:
 			--outFileNamePrefix $(dirname {output.aligned_reads}) \
 			--outSAMtype BAM SortedByCoordinate \
 			--outSAMunmapped Within \
-			--outSAMattributes Standard
+			--outSAMattributes Standard \
+        2> {log}
         """
