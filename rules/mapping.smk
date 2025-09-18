@@ -48,10 +48,11 @@ rule genome_indexing:
         genome_fasta = rules.get_genome.output.genome_fasta,
         gtf_file = rules.get_gtf.output.gtf_file
     output:
-        touch("data/genome/indexing_done")
+        touch(os.path.join(config["data_dir"], "genome", "indexing_done"))
     params:
-        genome_dir = os.path.join(config["data_dir"], "star_index")
-    threads: 10
+        genome_dir = os.path.join(config["data_dir"], "star_index"),
+        read_length = 149
+    threads: 5
     log:
         os.path.join(config["logs_dir"], "genome_indexing", "indexing.log")
     benchmark:
@@ -60,13 +61,15 @@ rule genome_indexing:
         "docker://mgibio/star:2.7.0f"
     shell:
         """
+        mkdir -p {params.genome_dir}
+        
         STAR \
             --runThreadN {threads} \
             --runMode genomeGenerate \
             --genomeDir {params.genome_dir} \
             --genomeFastaFiles {input.genome_fasta} \
             --sjdbGTFfile {input.gtf_file} \
-            --sjdbOverhang ReadLength-1 \
+            --sjdbOverhang {params.read_length} \
         2> {log}
         """
 
@@ -79,10 +82,10 @@ rule star_alignment:
         trimmed_reverse = rules.trimming.output.trimmed_reverse,
         genome_indexing_flag_file = rules.genome_indexing.output
     output:
-        aligned_reads = os.path.join("results", "aligned_reads", "{sample}", "{sample}_Aligned.sortedByCoord.out.bam")
+        aligned_reads = os.path.join(config["output_dir"], "aligned_reads", "{sample}", "{sample}_Aligned.sortedByCoord.out.bam")
     params:
         genome_dir = os.path.join(config["data_dir"], "star_index")
-    threads: 8
+    threads: 5
     log:
         os.path.join(config["logs_dir"], "mapping", "{sample}", "{sample}_star_mapping.log")
     benchmark:
@@ -91,14 +94,19 @@ rule star_alignment:
         "docker://mgibio/star:2.7.0f"
     shell:
         """
+        # STAR has an issue if input files are in a different file system. 
+        mkdir -p {wildcards.sample}
+        gunzip -c {input.trimmed_forward} > {wildcards.sample}/forward.fastq
+        gunzip -c {input.trimmed_reverse} > {wildcards.sample}/reverse.fastq
+
         STAR \
-			--readFilesCommand gunzip -c \
-			--genomeDir {params.genome_dir} \
+			--genomeDir {params.genome_dir}/ \
 			--runThreadN {threads} \
-			--readFilesIn {input.trimmed_forward} {input.trimmed_reverse} \
-			--outFileNamePrefix $(dirname {output.aligned_reads}) \
+			--readFilesIn {wildcards.sample}/forward.fastq {wildcards.sample}/reverse.fastq \
+			--outFileNamePrefix $(dirname {output.aligned_reads})/{wildcards.sample}_ \
 			--outSAMtype BAM SortedByCoordinate \
 			--outSAMunmapped Within \
-			--outSAMattributes Standard \
-        2> {log}
+			--outSAMattributes Standard
+
+        rm -r {wildcards.sample}
         """

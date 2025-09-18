@@ -5,4 +5,4 @@ raw_data/
 gene_counts/
 fastqc/
 dockerfiles/
-scripts/
+bk/

@@ -6,13 +6,13 @@ rule fastqc_after_trim:
         trimmed_forward = rules.trimming.output.trimmed_forward,
         trimmed_reverse = rules.trimming.output.trimmed_reverse
     output:
-        html1 = os.path.join(config["output_dir"], "qc_reports", "after_trimming", "{sample}", "{sample}_R1_001_fastqc.html"),
-        zipfile1 = os.path.join(config["output_dir"], "qc_reports", "after_trimming", "{sample}", "{sample}_R1_001_fastqc.zip"),
-        html2 = os.path.join(config["output_dir"], "qc_reports", "after_trimming", "{sample}", "{sample}_R2_001_fastqc.html"),
-        zipfile2 = os.path.join(config["output_dir"], "qc_reports", "after_trimming", "{sample}", "{sample}_R2_001_fastqc.zip")
+        html1 = os.path.join(config["output_dir"], "qc_reports", "after_trimming", "{sample}", "{sample}_R1_fastqc.html"),
+        zipfile1 = os.path.join(config["output_dir"], "qc_reports", "after_trimming", "{sample}", "{sample}_R1_fastqc.zip"),
+        html2 = os.path.join(config["output_dir"], "qc_reports", "after_trimming", "{sample}", "{sample}_R2_fastqc.html"),
+        zipfile2 = os.path.join(config["output_dir"], "qc_reports", "after_trimming", "{sample}", "{sample}_R2_fastqc.zip")
     params:
         wd = os.path.join(config["output_dir"], "qc_reports", "after_trimming", "{sample}/")
-    threads: 4
+    threads: 5
     log:
         os.path.join(config["logs_dir"], "FastQC", "after_trimming", "{sample}", "{sample}_fastqc_after_trimming.log")
     benchmark:

@@ -1,0 +1,5 @@
+name: UniBind_TFBS_enrichment
+channels:
+  - anaconda
+dependencies:
+  - requests=2.32.5

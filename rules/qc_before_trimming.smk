@@ -11,7 +11,7 @@ rule fastqc_before_trimming:
         html2 = os.path.join(config["output_dir"], "qc_reports", "before_trimming", "{sample}", "{sample}_R2_001_fastqc.html"),
         zipfile2 = os.path.join(config["output_dir"], "qc_reports", "before_trimming", "{sample}", "{sample}_R2_001_fastqc.zip")
     params:
-        wd = "results/qc_reports/before_trimming/{sample}/"
+        wd = os.path.join(config["output_dir"], "qc_reports", "before_trimming", "{sample}/")
     threads: 4
     log:
         os.path.join(config["logs_dir"], "FastQC", "before_trimming", "{sample}", "{sample}_fastqc_before_trimming.log")

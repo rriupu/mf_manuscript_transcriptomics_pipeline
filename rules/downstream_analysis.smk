@@ -4,11 +4,14 @@ rule data_exploration:
     """
     input:
         gene_counts = expand(rules.htseq_count.output.gene_counts, sample = SAMPLES),
-        condition_mapping = "conditionMapping.tsv",
-        r_script = os.path.join(config["scripts_dir"], "data_exploration.R")
+        condition_mapping = "conditionMapping.tsv"
     output:
-        flag_file = touch(os.path.join(config["output_dir"], "downstream_analysis", "data_exploration", "exploration_done"))
+        sample_sample_distance_heatmap = os.path.join(config["output_dir"], "downstream_analysis", "data_exploration", "sample_sample_distance_blind_no_donor_effect.pdf"),
+        correlation_heatmap = os.path.join(config["output_dir"], "downstream_analysis", "data_exploration", "correlation_heatmap_no_donor_effect.pdf"),
+        PCA_plot = os.path.join(config["output_dir"], "downstream_analysis", "data_exploration", "PCA_blind_no_donor_effect.pdf"),
+        PCA_plot_facet = os.path.join(config["output_dir"], "downstream_analysis", "data_exploration", "PCA_blind_no_donor_effect_facet.pdf")
     params:
+        r_script = os.path.join(config["scripts_dir"], "data_exploration.R"),
         gene_counts_dir = os.path.join(config["output_dir"], "gene_counts"),
         output_dir = os.path.join(config["output_dir"], "downstream_analysis", "data_exploration")
     threads: 1
@@ -16,16 +19,17 @@ rule data_exploration:
         os.path.join(config["logs_dir"], "data_exploration", "data_exploration.log")
     benchmark:
         os.path.join(config["benchmarks_dir"], "data_exploration", "data_exploration.txt")
-    # container:
+    conda:
+        "../envs/downstream.yaml"
     shell:
         """
-        Rscript {input.r_script} \
+        Rscript {params.r_script} \
             --conditionMapping {input.condition_mapping} \
             --geneCountsDir {params.gene_counts_dir} \
             --outputDir {params.output_dir}
         """
 
-rule DEA:
+checkpoint DEA:
     """
     Run a differential expression analysis with R.
     """
@@ -34,71 +38,47 @@ rule DEA:
         condition_mapping = "conditionMapping.tsv",
         r_script = os.path.join(config["scripts_dir"], "DEA.R")
     output:
-        flag_file = touch(os.path.join(config["output_dir"], "downstream_analysis", "DEA", "DEA_done"))
+        comparison_results = directory(os.path.join(config["output_dir"], "downstream_analysis", "DEA"))
     params:
-        gene_counts_dir = os.path.join(config["output_dir"], "gene_counts"),
-        output_dir = os.path.join(config["output_dir"], "downstream_analysis", "DEA")
+        gene_counts_dir = os.path.join(config["output_dir"], "gene_counts")
     threads: 1
     log:
         os.path.join(config["logs_dir"], "DEA", "DEA.log")
     benchmark:
         os.path.join(config["benchmarks_dir"], "DEA", "DEA.txt")
-    # container:
+    conda:
+        "../envs/downstream.yaml"
     shell:
         """
         Rscript {input.r_script} \
             --conditionMapping {input.condition_mapping} \
             --geneCountsDir {params.gene_counts_dir} \
-            --outputDir {params.output_dir}
+            --outputDir {output.output_dir}
         """
 
-rule gene_clustering:
-    """
-    
-    """
-    input:
-        gene_counts = expand(rules.htseq_count.output.gene_counts, sample = SAMPLES),
-        condition_mapping = "conditionMapping.tsv",
-        r_script = os.path.join(config["scripts_dir"], "gene_clustering.R")
-    output:
-        flag_file = touch(os.path.join(config["output_dir"], "downstream_analysis", "gene_clustering", "clustering_done"))
-    params:
-        gene_counts_dir = os.path.join(config["output_dir"], "gene_counts"),
-        output_dir = os.path.join(config["output_dir"], "downstream_analysis", "data_exploration")
-    threads: 1
-    log:
-        os.path.join(config["logs_dir"], "gene_clustering", "gene_clustering.log")
-    benchmark:
-        os.path.join(config["benchmarks_dir"], "gene_clustering", "gene_clustering.txt")
-    # container:
-    shell:
-        """
-        Rscript {input.r_script} \
-            --conditionMapping {input.condition_mapping} \
-            --geneCountsDir {params.gene_counts_dir} \
-            --outputDir {params.output_dir}
-        """
-
-# rule TFBS_enrichment:
+# rule gene_clustering:
 #     """
-#     Run a differential expression analysis with R.
+    
 #     """
 #     input:
 #         gene_counts = expand(rules.htseq_count.output.gene_counts, sample = SAMPLES),
 #         condition_mapping = "conditionMapping.tsv",
-#         r_script = os.path.join("scripts", "data_exploration.R")
+#         r_script = os.path.join(config["scripts_dir"], "gene_clustering.R")
 #     output:
-#         touch(os.path.join("results", "downstream_analysis", "data_exploration", "exploration_done"))
+#         flag_file = touch(os.path.join(config["output_dir"], "downstream_analysis", "gene_clustering", "clustering_done"))
 #     params:
-#         gene_counts_dir = os.path.join("results", "gene_counts"),
-#         output_dir = os.path.join("results", "downstream_analysis", "data_exploration")
+#         gene_counts_dir = os.path.join(config["output_dir"], "gene_counts"),
+#         output_dir = os.path.join(config["output_dir"], "downstream_analysis", "data_exploration")
 #     threads: 1
 #     log:
-#         "logs/{sample}/{sample}_DEA.log"
+#         os.path.join(config["logs_dir"], "gene_clustering", "gene_clustering.log")
 #     benchmark:
-#         "benchmarks/{sample}/{sample}_DEA.txt"
-#     container:
+#         os.path.join(config["benchmarks_dir"], "gene_clustering", "gene_clustering.txt")
+#     # container:
 #     shell:
 #         """
-        
+#         Rscript {input.r_script} \
+#             --conditionMapping {input.condition_mapping} \
+#             --geneCountsDir {params.gene_counts_dir} \
+#             --outputDir {params.output_dir}
 #         """

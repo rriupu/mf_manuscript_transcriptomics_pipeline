@@ -1,0 +1,24 @@
+name: downstream
+channels:
+  - bioconda
+  - conda-forge
+  - ccordoba12
+dependencies:
+  - bedtools=2.31.1
+  - bioconductor-annotationdbi=1.68.0
+  - bioconductor-deseq2=1.46.0
+  - bioconductor-limma=3.62.1
+  - r-pheatmap=1.0.13
+  - r-rcolorbrewer
+  - r-ggplot2=3.5.2
+  - r-optparse=1.7.5
+  - r-dplyr=1.1.4
+  - r-ggh4x=0.3.0
+  - bioconductor-org.hs.eg.db=3.20.0
+  - r-tidyverse=2.0.0
+  - bioconductor-clusterprofiler=4.14.0
+  - bioconductor-reactomepa=1.50.0
+  - bioconductor-summarizedexperiment=1.36.0
+  - bioconductor-go.db=3.20.0
+  - bioconductor-gsva=2.0.0
+  - r-stringr=1.5.2

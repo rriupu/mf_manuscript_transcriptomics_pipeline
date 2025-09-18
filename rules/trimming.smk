@@ -11,7 +11,7 @@ rule trimming:
     params:
         adapter_fwd = config["adapter_fwd"],
         adapter_rev = config["adapter_rev"]
-    threads: 4
+    threads: 1
     log:
         os.path.join(config["logs_dir"], "trimming", "{sample}", "{sample}_trimming.log")
     benchmark:
