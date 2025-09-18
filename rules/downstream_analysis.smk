@@ -29,6 +29,61 @@ rule data_exploration:
             --outputDir {params.output_dir}
         """
 
+rule gene_clustering:
+    """
+    
+    """
+    input:
+        gene_counts = expand(rules.htseq_count.output.gene_counts, sample = SAMPLES),
+        condition_mapping = "conditionMapping.tsv"
+    output:
+        clusters = os.path.join(config["output_dir"], "downstream_analysis", "gene_clustering", "clusters.pdf")
+    params:
+        r_script = os.path.join(config["scripts_dir"], "gene_clustering.R"),
+        gene_counts_dir = os.path.join(config["output_dir"], "gene_counts"),
+        output_dir = os.path.join(config["output_dir"], "downstream_analysis", "gene_clustering")
+    threads: 1
+    log:
+        os.path.join(config["logs_dir"], "gene_clustering", "gene_clustering.log")
+    benchmark:
+        os.path.join(config["benchmarks_dir"], "gene_clustering", "gene_clustering.txt")
+    conda:
+        "../envs/downstream.yaml"
+    shell:
+        """
+        Rscript {params.r_script} \
+            --conditionMapping {input.condition_mapping} \
+            --geneCountsDir {params.gene_counts_dir} \
+            --outputDir {params.output_dir}
+        """
+
+rule GSVA:
+    """
+    """
+    input:
+        gene_counts = expand(rules.htseq_count.output.gene_counts, sample = SAMPLES),
+        condition_mapping = "conditionMapping.tsv"
+    output:
+        GSVA_plot = os.path.join(config["output_dir"], "downstream_analysis", "GSVA", "GSVA.pdf")
+    params:
+        gsva_script = os.path.join(config["scripts_dir"], "GSVA.R"),
+        gene_counts_dir = os.path.join(config["output_dir"], "gene_counts"),
+        output_dir = os.path.join(config["output_dir"], "downstream_analysis", "GSVA")
+    threads: 1
+    log:
+        os.path.join(config["logs_dir"], "GSVA", "GSVA.log")
+    benchmark:
+        os.path.join(config["benchmarks_dir"], "GSVA", "GSVA.txt")
+    conda:
+        "../envs/downstream.yaml"
+    shell:
+        """
+        Rscript {params.gsva_script} \
+            -c {input.condition_mapping} \
+            -g {params.gene_counts_dir} \
+            -o {params.output_dir}
+        """
+
 checkpoint DEA:
     """
     Run a differential expression analysis with R.
@@ -55,30 +110,3 @@ checkpoint DEA:
             --geneCountsDir {params.gene_counts_dir} \
             --outputDir {output.output_dir}
         """
-
-# rule gene_clustering:
-#     """
-    
-#     """
-#     input:
-#         gene_counts = expand(rules.htseq_count.output.gene_counts, sample = SAMPLES),
-#         condition_mapping = "conditionMapping.tsv",
-#         r_script = os.path.join(config["scripts_dir"], "gene_clustering.R")
-#     output:
-#         flag_file = touch(os.path.join(config["output_dir"], "downstream_analysis", "gene_clustering", "clustering_done"))
-#     params:
-#         gene_counts_dir = os.path.join(config["output_dir"], "gene_counts"),
-#         output_dir = os.path.join(config["output_dir"], "downstream_analysis", "data_exploration")
-#     threads: 1
-#     log:
-#         os.path.join(config["logs_dir"], "gene_clustering", "gene_clustering.log")
-#     benchmark:
-#         os.path.join(config["benchmarks_dir"], "gene_clustering", "gene_clustering.txt")
-#     # container:
-#     shell:
-#         """
-#         Rscript {input.r_script} \
-#             --conditionMapping {input.condition_mapping} \
-#             --geneCountsDir {params.gene_counts_dir} \
-#             --outputDir {params.output_dir}
-#         """

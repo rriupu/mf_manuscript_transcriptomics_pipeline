@@ -15,8 +15,8 @@ rule all:
     input:
         rules.multiqc_before_trimming.output,
         rules.multiqc_after_trim.output,
-        # expand(rules.star_alignment.output.aligned_reads, sample = SAMPLES)
-        # expand(rules.htseq_count.output.gene_counts, sample = SAMPLES),
         rules.data_exploration.output.sample_sample_distance_heatmap,
+        # rules.gene_clustering.output.clusters,
+        # rules.GSVA.output.GSVA_plot,
+        # rules.generate_TFBS_enrichment_summary_plots.output.summary_plots,
         # rules.DEA.output.flag_file,
-        # rules.gene_clustering.output.flag_file

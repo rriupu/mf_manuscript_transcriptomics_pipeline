@@ -103,7 +103,6 @@ rule prepare_symbol2entrez_mapping:
             -o {output.mapping}
         """
 
-# Prepare background files
 rule generate_background:
     """
     """
@@ -130,7 +129,6 @@ rule generate_background:
             -o {params.output_dir}
         """
 
-# Prepare foreground files
 rule generate_foreground:
     """
     """
@@ -157,7 +155,6 @@ rule generate_foreground:
             -o {params.output_dir}
         """
 
-# Run enrichment analyses
 rule TFBS_enrichment:
     """
     Run the UniBind TFBS enrichment analysis for each comparison's DEGs.
@@ -207,18 +204,19 @@ def aggregate_enrichment_results(wildcards):
     )
     return out
 
-# Generate plots
-rule generate_summary_plots:
+rule generate_TFBS_enrichment_summary_plots:
     """
     """
     input:
         aggregate_enrichment_results
     output:
-        expand(os.path.join(config["output_dir"], "unibind_enrichment", "summary_plots", "{deg_subset}", "summary_dotplot_all.pdf"), deg_subset = ["all", "upregulated", "downregulated"])
+        summary_plots = expand(os.path.join(config["output_dir"], "unibind_enrichment", "summary_plots", "{deg_subset}", "summary_dotplot_all.pdf"), deg_subset = ["all", "upregulated", "downregulated"]),
+        upset_plots = expand(os.path.join(config["output_dir"], "unibind_enrichment", "upset_plots", "{deg_subset}", "upset_plot_all_comparisons.pdf"), deg_subset = ["all", "upregulated", "downregulated"])
     params:
         TFBS_enrichment_summary_plot = os.path.join(config["scripts_dir"], "TFBS_enrichment_summary.R"),
         input_dir = os.path.join(config["output_dir"], "unibind_enrichment", "{deg_subset}"),
-        output_dir = os.path.join(config["output_dir"], "unibind_enrichment", "summary_plots")
+        summary_output_dir = os.path.join(config["output_dir"], "unibind_enrichment", "summary_plots"),
+        upset_plots_output_dir = os.path.join(config["output_dir"], "unibind_enrichment", "summary_plots")
     threads: 1
     log:
         os.path.join(config["logs_dir"], "unibind_TFBS_enrichment", "TFBS_summary_plots_{comparison}_{deg_subset}.log")
@@ -227,9 +225,16 @@ rule generate_summary_plots:
     shell:
         """
         for comparison in all downregulated upregulated; do
+            
             Rscript {params.TFBS_enrichment_summary_plot} \
                 -i {params.input_dir} \
                 -c $comparison \
-                -o {params.output_dir}/$comparison/
+                -o {params.summary_output_dir}/$comparison/
+
+            Rscript {params.TFBS_enrichment_upset_plot} \
+                -i {params.input_dir} \
+                -c $comparison \
+                -o {params.upset_plots_output_dir}/$comparison/
+
         done
         """

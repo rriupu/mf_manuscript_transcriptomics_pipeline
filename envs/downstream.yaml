@@ -22,3 +22,6 @@ dependencies:
   - bioconductor-go.db=3.20.0
   - bioconductor-gsva=2.0.0
   - r-stringr=1.5.2
+  - r-data.table=1.17.8
+  - bioconductor-edger=4.4.0
+  - bioconductor-sva=3.54.0
