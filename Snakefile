@@ -17,7 +17,6 @@ rule all:
         rules.multiqc_before_trimming.output,
         rules.multiqc_after_trim.output,
         rules.data_exploration.output.sample_sample_distance_heatmap,
-        # rules.gene_clustering.output.clusters,
-        # rules.GSVA.output.GSVA_plot,
+        rules.gene_clustering.output.clusters,
+        rules.GSVA.output.GSVA_plot,
         expand(rules.generate_TFBS_enrichment_summary_plots.output.summary_plot, deg_subset = ["all", "upregulated", "downregulated"])
-        # rules.DEA.output.flag_file,

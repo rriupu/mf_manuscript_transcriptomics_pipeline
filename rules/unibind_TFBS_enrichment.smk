@@ -235,24 +235,26 @@ rule generate_TFBS_enrichment_summary_plots:
         upset_plot = os.path.join(config["output_dir"], "unibind_enrichment", "upset_plots", "{deg_subset}", "upset_plot_all_comparisons.pdf")
     params:
         TFBS_enrichment_summary_plot_script = os.path.join(config["scripts_dir"], "TFBS_enrichment_summary.R"),
-        TFBS_enrichment_upset_plot_script = os.path.join(config["scripts_dir"], "TFBS_enrichment_summary.R"),
-        input_dir = os.path.join(config["output_dir"], "unibind_enrichment", "{deg_subset}"),
+        TFBS_enrichment_upset_plot_script = os.path.join(config["scripts_dir"], "upset_plot.R"),
+        input_dir = os.path.join(config["output_dir"], "unibind_enrichment"),
         summary_output_dir = os.path.join(config["output_dir"], "unibind_enrichment", "summary_plots"),
-        upset_plots_output_dir = os.path.join(config["output_dir"], "unibind_enrichment", "summary_plots")
+        upset_plots_output_dir = os.path.join(config["output_dir"], "unibind_enrichment", "upset_plots")
     threads: 1
     log:
         os.path.join(config["logs_dir"], "unibind_TFBS_enrichment", "TFBS_summary_plots_{deg_subset}.log")
     benchmark:
         os.path.join(config["benchmarks_dir"], "unibind_TFBS_enrichment", "TFBS_summary_plots_{deg_subset}.txt")
+    conda:
+        "../envs/downstream.yaml"
     shell:
         """
         Rscript {params.TFBS_enrichment_summary_plot_script} \
                 -i {params.input_dir} \
                 -c {wildcards.deg_subset} \
-                -o {params.summary_output_dir}/$comparison/
+                -o {params.summary_output_dir}/{wildcards.deg_subset}/
 
         Rscript {params.TFBS_enrichment_upset_plot_script} \
             -i {params.input_dir} \
             -c {wildcards.deg_subset} \
-            -o {params.upset_plots_output_dir}/$comparison/
+            -o {params.upset_plots_output_dir}/{wildcards.deg_subset}/
         """

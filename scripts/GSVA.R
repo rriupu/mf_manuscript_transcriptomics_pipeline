@@ -2,7 +2,7 @@
 ## Library loading ##
 ## --------------- ##
 
-library(SummarizedExpReriment)
+library(SummarizedExperiment)
 library(optparse)
 library(edgeR)
 library(org.Hs.eg.db)
@@ -196,7 +196,7 @@ heatmap = Heatmap(
     row_names_gp = grid::gpar(fontsize = 8)
 )
 
-pdf(file.path(output_dir, "test.pdf"), width = 14, height = 10)
+pdf(file.path(output_dir, "GO_heatmap_mat.pdf"), width = 14, height = 10)
 draw(heatmap)
 dev.off()
 
@@ -212,7 +212,7 @@ h = Heatmap(
     column_names_gp = grid::gpar(fontsize = 8),
     row_names_gp = grid::gpar(fontsize = 8)
 )
-pdf(file.path(output_dir, "GSVA.pdf"), width = 14, height = 10)
+pdf(file.path(output_dir, "GSVA_GO.pdf"), width = 14, height = 10)
 draw(h)
 dev.off()
 
@@ -337,11 +337,14 @@ h = Heatmap(
     column_names_gp = grid::gpar(fontsize = 8),
     row_names_gp = grid::gpar(fontsize = 8)
 )
-pdf("GSVA.pdf", width = 14, height = 10)
+pdf("GSVA_reactome.pdf", width = 14, height = 10)
 draw(h)
 dev.off()
 
-# Metapatient as average per condition
+## ------------------------------------ ##
+## Metapatient as average per condition ##
+## ------------------------------------ ##
+
 conditions_ls = list()
 for (i in seq_along(unique(conditionMapping$condition))) {
 
@@ -363,76 +366,3 @@ h2 = Heatmap(
 pdf("GSVA_metapatient.pdf", width = 14, height = 10)
 draw(h2)
 dev.off()
-
-####
-
-library(GSVAdata)
-
-data(geneprotExpCostaEtAl2021)
-se = geneExpCostaEtAl2021
-
-URL = "https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2024.1.Hs/c7.immunesigdb.v2024.1.Hs.symbols.gmt"
-c7.genesets = readGMT(URL)
-
-
-gsvaAnnotation(se) = EntrezIdentifier("org.Hs.eg.db")
-colData(se)
-innatepat = c("NKCELL_VS_.+_UP", "MAST_CELL_VS_.+_UP",
-               "EOSINOPHIL_VS_.+_UP", "BASOPHIL_VS_.+_UP",
-               "MACROPHAGE_VS_.+_UP", "NEUTROPHIL_VS_.+_UP")
-innatepat = paste(innatepat, collapse="|")
-innategsets = names(c7.genesets)[grep(innatepat, names(c7.genesets))]
-length(innategsets)
-
-adaptivepat = c("CD4_TCELL_VS_.+_UP", "CD8_TCELL_VS_.+_UP", "BCELL_VS_.+_UP")
-adaptivepat = paste(adaptivepat, collapse="|")
-adaptivegsets = names(c7.genesets)[grep(adaptivepat, names(c7.genesets))]
-excludepat = c("NAIVE", "LUPUS", "MYELOID")
-excludepat = paste(excludepat, collapse="|")
-adaptivegsets = adaptivegsets[-grep(excludepat, adaptivegsets)]
-length(adaptivegsets)
-
-c7.genesets.filt = c7.genesets[c(innategsets, adaptivegsets)]
-length(c7.genesets.filt)
-
-gsvapar = gsvaParam(se, c7.genesets.filt, assay="logCPM", minSize=5,
-                     maxSize=300)
-es = gsva(gsvapar)
-
-library(sva)
-library(limma)
-
-## build design matrix of the model to which we fit the data
-mod = model.matrix(~ FIR, colData(es))
-## build design matrix of the corresponding null model
-mod0 = model.matrix(~ 1, colData(es))
-## estimate surrogate variables (SVs) with SVA
-sv = sva(assay(es), mod, mod0)
-## add SVs to the design matrix of the model of interest
-mod = cbind(mod, sv$sv)
-## fit linear models
-fit = lmFit(assay(es), mod)
-## calculate moderated t-statistics using the robust regime
-fit.eb = eBayes(fit, robust=TRUE)
-## summarize the extent of differential expression at 5% FDR
-res = decideTests(fit.eb)
-summary(res)
-
-gssizes = geneSetSizes(es)
-plot(sqrt(gssizes), sqrt(fit.eb$sigma), xlab="Sqrt(gene sets sizes)",
-          ylab="Sqrt(standard deviation)", las=1, pch=".", cex=4)
-lines(lowess(sqrt(gssizes), sqrt(fit.eb$sigma)), col="red", lwd=2)
-
-fit.eb.trend = eBayes(fit, robust=TRUE, trend=gssizes)
-res = decideTests(fit.eb.trend)
-summary(res)
-
-tt = topTable(fit.eb.trend, coef=2, n=Inf)
-DEpwys = rownames(tt)[tt$adj.P.Val <= 0.05]
-length(DEpwys)
-
-DEpwys_es = removeBatchEffect(
-    assay(es[DEpwys, ]),
-    covariates=mod[, 2:ncol(mod)],
-    design=mod[, 1:2]
-)

@@ -66,7 +66,7 @@ rule GSVA:
         gene_counts = expand(rules.htseq_count.output.gene_counts, sample = SAMPLES),
         condition_mapping = "conditionMapping.tsv"
     output:
-        GSVA_plot = os.path.join(config["output_dir"], "downstream_analysis", "GSVA", "GSVA.pdf")
+        GSVA_plot = os.path.join(config["output_dir"], "downstream_analysis", "GSVA", "GSVA_GO.pdf")
     params:
         gsva_script = os.path.join(config["scripts_dir"], "GSVA.R"),
         gene_counts_dir = os.path.join(config["output_dir"], "gene_counts"),

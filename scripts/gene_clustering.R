@@ -43,13 +43,6 @@ outputDir = opt$outputDir
 
 dir.create(outputDir, recursive = T, showWarnings = F)
 
-
-# conditionMapping = "conditionMapping.tsv"
-# conditionMapping = prepareConditionMapping(conditionMapping)
-
-# geneCountsDir = "gene_counts/"
-# outputDir = "gene_clustering_2/"
-
 ## -------------------- ##
 ## Prepare DESeqDataset ##
 ## -------------------- ##
