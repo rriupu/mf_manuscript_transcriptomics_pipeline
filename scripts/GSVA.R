@@ -196,7 +196,7 @@ heatmap = Heatmap(
     row_names_gp = grid::gpar(fontsize = 8)
 )
 
-pdf(file.path(output_dir, "GO_heatmap_mat.pdf"), width = 14, height = 10)
+pdf(file.path(outputDir, "GO_heatmap_mat.pdf"), width = 14, height = 10)
 draw(heatmap)
 dev.off()
 
@@ -212,7 +212,7 @@ h = Heatmap(
     column_names_gp = grid::gpar(fontsize = 8),
     row_names_gp = grid::gpar(fontsize = 8)
 )
-pdf(file.path(output_dir, "GSVA_GO.pdf"), width = 14, height = 10)
+pdf(file.path(outputDir, "GSVA_GO.pdf"), width = 14, height = 10)
 draw(h)
 dev.off()
 
@@ -221,7 +221,8 @@ dev.off()
 ## ------------------- ##
 
 # URL = "https://www.gsea-msigdb.org/gsea/msigdb/download_file.jsp?filePath=/msigdb/release/2025.1.Hs/c2.cp.reactome.v2025.1.Hs.symbols.gmt"
-c2_reactome = clusterProfiler::read.gmt("c2.cp.reactome.v2025.1.Hs.symbols.gmt")
+
+c2_reactome = clusterProfiler::read.gmt("scripts/c2.cp.reactome.v2025.1.Hs.symbols.gmt")
 terms = unique(c2_reactome$term)
 genestopath = lapply(terms, function(x) {
     genes = unique(c2_reactome$gene[c2_reactome$term == x])
@@ -337,7 +338,7 @@ h = Heatmap(
     column_names_gp = grid::gpar(fontsize = 8),
     row_names_gp = grid::gpar(fontsize = 8)
 )
-pdf("GSVA_reactome.pdf", width = 14, height = 10)
+pdf(file.path(outputDir, "GSVA_reactome.pdf"), width = 14, height = 10)
 draw(h)
 dev.off()
 
@@ -363,6 +364,6 @@ h2 = Heatmap(
     column_names_gp = grid::gpar(fontsize = 8),
     row_names_gp = grid::gpar(fontsize = 8)
 )
-pdf("GSVA_metapatient.pdf", width = 14, height = 10)
+pdf(file.path(outputDir, "GSVA_metapatient.pdf"), width = 14, height = 10)
 draw(h2)
 dev.off()
