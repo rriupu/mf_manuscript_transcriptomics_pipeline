@@ -11,7 +11,7 @@ rule data_exploration:
         PCA_plot = os.path.join(config["output_dir"], "downstream_analysis", "data_exploration", "PCA_blind_no_donor_effect.pdf"),
         PCA_plot_facet = os.path.join(config["output_dir"], "downstream_analysis", "data_exploration", "PCA_blind_no_donor_effect_facet.pdf")
     params:
-        r_script = os.path.join(config["scripts_dir"], "data_exploration.R"),
+        r_script = os.path.join("scripts", "data_exploration.R"),
         gene_counts_dir = os.path.join(config["output_dir"], "gene_counts"),
         output_dir = os.path.join(config["output_dir"], "downstream_analysis", "data_exploration")
     threads: 1
@@ -40,7 +40,7 @@ rule gene_clustering:
     output:
         clusters = os.path.join(config["output_dir"], "downstream_analysis", "gene_clustering", "clusters.pdf")
     params:
-        r_script = os.path.join(config["scripts_dir"], "gene_clustering.R"),
+        r_script = os.path.join("scripts", "gene_clustering.R"),
         gene_counts_dir = os.path.join(config["output_dir"], "gene_counts"),
         output_dir = os.path.join(config["output_dir"], "downstream_analysis", "gene_clustering")
     threads: 1
@@ -68,7 +68,7 @@ rule GSVA:
     output:
         GSVA_plot = os.path.join(config["output_dir"], "downstream_analysis", "GSVA", "GSVA_GO.pdf")
     params:
-        gsva_script = os.path.join(config["scripts_dir"], "GSVA.R"),
+        gsva_script = os.path.join("scripts", "GSVA.R"),
         gene_counts_dir = os.path.join(config["output_dir"], "gene_counts"),
         output_dir = os.path.join(config["output_dir"], "downstream_analysis", "GSVA")
     threads: 1
@@ -94,7 +94,7 @@ checkpoint DEA:
     input:
         gene_counts = expand(rules.htseq_count.output.gene_counts, sample = SAMPLES),
         condition_mapping = "conditionMapping.tsv",
-        r_script = os.path.join(config["scripts_dir"], "DEA.R")
+        r_script = os.path.join("scripts", "DEA.R")
     output:
         comparison_results = directory(os.path.join(config["output_dir"], "downstream_analysis", "DEA"))
     params:

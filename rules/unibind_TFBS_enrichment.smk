@@ -3,9 +3,9 @@ rule get_unibind_TFBS_enrichment_repo:
     Clone the git repository with the UniBind TFBS enrichment tool.
     """
     output:
-        repository_cloned_flag_file = touch(os.path.join(config["scripts_dir"], "unibind_repository_cloned_flag_file"))
+        repository_cloned_flag_file = touch(os.path.join("scripts", "unibind_repository_cloned_flag_file"))
     params:
-        clone_dir = os.path.join(config["scripts_dir"])
+        clone_dir = os.path.join("scripts")
     threads: 1
     benchmark:
         os.path.join(config["benchmarks_dir"], "unibind_TFBS_enrichment", "get_repo.txt")
@@ -23,7 +23,7 @@ rule get_LOLA_database_for_unibind_enrichment:
     output:
         lola_db = os.path.join(config["data_dir"], "unibind_TFBS_enrichment", "hg38_robust_UniBind_LOLA.RDS")
     params:
-        zenodo_fetch_script = os.path.join(config["scripts_dir"], "unibind_enrichment", "bin", "zenodo_fetch")
+        zenodo_fetch_script = os.path.join("scripts", "unibind_enrichment", "bin", "zenodo_fetch")
     threads: 1
     log:
         os.path.join(config["logs_dir"], "unibind_TFBS_enrichment", "get_LOLA_db.log")
@@ -67,7 +67,7 @@ rule prepare_TSS_annotations:
     output:
         TSS_annotations = os.path.join(config["data_dir"], "unibind_TFBS_enrichment", "TSS_annotations", "mRNA_entrez_annotations_processed_sorted.bed")
     params:
-        prepare_TSS_annotations_script = os.path.join(config["scripts_dir"], "prepare_TSS_annotations.sh"),
+        prepare_TSS_annotations_script = os.path.join("scripts", "prepare_TSS_annotations.sh"),
         output_dir = os.path.join(config["data_dir"], "unibind_TFBS_enrichment", "TSS_annotations")
     threads: 1
     log:
@@ -93,7 +93,7 @@ rule prepare_symbol2entrez_mapping:
     output:
         mapping = os.path.join(config["data_dir"], "unibind_TFBS_enrichment", "symbol2entrez_mapping.tsv")
     params:
-        mapping_script = os.path.join(config["scripts_dir"], "generate_symbol2entrez_mapping.R")
+        mapping_script = os.path.join("scripts", "generate_symbol2entrez_mapping.R")
     threads: 1
     log:
         os.path.join(config["logs_dir"], "unibind_TFBS_enrichment", "prepare_symbol_to_entrez_mapping.log")
@@ -120,7 +120,7 @@ rule generate_background:
         background_file = os.path.join(config["output_dir"], "unibind_enrichment", "background.bed")
     params:
         output_dir = os.path.join(config["output_dir"], "unibind_enrichment"),
-        generate_background_script = os.path.join(config["scripts_dir"], "prepare_background.R")
+        generate_background_script = os.path.join("scripts", "prepare_background.R")
     threads: 1
     log:
         os.path.join(config["logs_dir"], "unibind_TFBS_enrichment", "generate_background.log")
@@ -148,7 +148,7 @@ rule generate_foreground:
     output:
         foreground_file = expand(os.path.join(config["output_dir"], "unibind_enrichment", "{{comparison}}", "foreground_{deg_subset}.bed"), deg_subset = ["all", "upregulated", "downregulated"])
     params:
-        generate_foreground_script = os.path.join(config["scripts_dir"], "prepare_foreground.R"),
+        generate_foreground_script = os.path.join("scripts", "prepare_foreground.R"),
         output_dir = os.path.join(config["output_dir"], "unibind_enrichment", "{comparison}")
     threads: 1
     log:
@@ -181,7 +181,7 @@ rule TFBS_enrichment:
         enrichment_results = os.path.join(config["output_dir"], "unibind_enrichment", "{comparison}", "{deg_subset}", "allEnrichments.tsv")
     params:
         output_dir = os.path.join(config["output_dir"], "unibind_enrichment", "{comparison}", "{deg_subset}"),
-        enrichment_script = os.path.join(config["scripts_dir"], "unibind_enrichment", "bin", "UniBind_enrich.sh")
+        enrichment_script = os.path.join("scripts", "unibind_enrichment", "bin", "UniBind_enrich.sh")
     threads: 1
     log:
         os.path.join(config["logs_dir"], "unibind_TFBS_enrichment", "{comparison}_{deg_subset}_enrichment.log")
@@ -234,8 +234,8 @@ rule generate_TFBS_enrichment_summary_plots:
         summary_plot = os.path.join(config["output_dir"], "unibind_enrichment", "summary_plots", "{deg_subset}", "summary_dotplot_all.pdf"),
         upset_plot = os.path.join(config["output_dir"], "unibind_enrichment", "upset_plots", "{deg_subset}", "upset_plot_all_comparisons.pdf")
     params:
-        TFBS_enrichment_summary_plot_script = os.path.join(config["scripts_dir"], "TFBS_enrichment_summary.R"),
-        TFBS_enrichment_upset_plot_script = os.path.join(config["scripts_dir"], "upset_plot.R"),
+        TFBS_enrichment_summary_plot_script = os.path.join("scripts", "TFBS_enrichment_summary.R"),
+        TFBS_enrichment_upset_plot_script = os.path.join("scripts", "upset_plot.R"),
         input_dir = os.path.join(config["output_dir"], "unibind_enrichment"),
         summary_output_dir = os.path.join(config["output_dir"], "unibind_enrichment", "summary_plots"),
         upset_plots_output_dir = os.path.join(config["output_dir"], "unibind_enrichment", "upset_plots")
