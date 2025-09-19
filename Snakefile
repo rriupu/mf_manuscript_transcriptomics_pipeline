@@ -10,6 +10,7 @@ include: "rules/qc_after_trimming.smk"
 include: "rules/mapping.smk"
 include: "rules/gene_counting.smk"
 include: "rules/downstream_analysis.smk"
+include: "rules/unibind_TFBS_enrichment.smk"
 
 rule all:
     input:
@@ -18,5 +19,5 @@ rule all:
         rules.data_exploration.output.sample_sample_distance_heatmap,
         # rules.gene_clustering.output.clusters,
         # rules.GSVA.output.GSVA_plot,
-        # rules.generate_TFBS_enrichment_summary_plots.output.summary_plots,
+        expand(rules.generate_TFBS_enrichment_summary_plots.output.summary_plot, deg_subset = ["all", "upregulated", "downregulated"])
         # rules.DEA.output.flag_file,

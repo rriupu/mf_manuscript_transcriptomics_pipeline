@@ -5,6 +5,8 @@ This repository contains the Snakmake pipeline for the tumor macrophage project 
 ## Dependencies
 
 Before running this pipeline, please make sure you have the following dependencies installed:
+
+- Git
 - Conda
 - Singularity
 

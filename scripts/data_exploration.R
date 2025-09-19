@@ -46,7 +46,7 @@ outputDir = opt$outputDir
 ## Prepare DESeqDataset ##
 ## -------------------- ##
 
-dset = prepareDESeqDataset(conditionMapping, geneCountsDir)
+dset = prepareDESeqDataset(conditionMapping, geneCountsDir, formula = "~ donor + condition")
 
 dset$condition = relevel(dset$condition, ref = "Untreated")
 

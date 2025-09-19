@@ -26,7 +26,8 @@ rule data_exploration:
         Rscript {params.r_script} \
             --conditionMapping {input.condition_mapping} \
             --geneCountsDir {params.gene_counts_dir} \
-            --outputDir {params.output_dir}
+            --outputDir {params.output_dir} \
+        2> {log}
         """
 
 rule gene_clustering:
@@ -54,7 +55,8 @@ rule gene_clustering:
         Rscript {params.r_script} \
             --conditionMapping {input.condition_mapping} \
             --geneCountsDir {params.gene_counts_dir} \
-            --outputDir {params.output_dir}
+            --outputDir {params.output_dir} \
+        2> {log}
         """
 
 rule GSVA:
@@ -81,7 +83,8 @@ rule GSVA:
         Rscript {params.gsva_script} \
             -c {input.condition_mapping} \
             -g {params.gene_counts_dir} \
-            -o {params.output_dir}
+            -o {params.output_dir} \
+        2> {log}
         """
 
 checkpoint DEA:
@@ -108,5 +111,6 @@ checkpoint DEA:
         Rscript {input.r_script} \
             --conditionMapping {input.condition_mapping} \
             --geneCountsDir {params.gene_counts_dir} \
-            --outputDir {output.output_dir}
+            --outputDir {output.comparison_results} \
+        2> {log}
         """

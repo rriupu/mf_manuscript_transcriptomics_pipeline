@@ -6,3 +6,6 @@ gene_counts/
 fastqc/
 dockerfiles/
 bk/
+Rplots.pdf
+scripts/unibind_enrichment/
+scripts/unibind_repository_cloned_flag_file

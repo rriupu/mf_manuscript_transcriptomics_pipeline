@@ -25,3 +25,4 @@ dependencies:
   - r-data.table=1.17.8
   - bioconductor-edger=4.4.0
   - bioconductor-sva=3.54.0
+  - bioconductor-apeglm=1.28.0

@@ -64,7 +64,7 @@ dset$condition = relevel(dset$condition, ref = "Untreated")
 
 dds = DESeq(dset)
 
-pdf(file.path(output_dir, "dispersion_estimates.pdf"))
+pdf(file.path(outputDir, "dispersion_estimates.pdf"))
 plotDispEsts(dds)
 dev.off()
 
@@ -82,7 +82,7 @@ for (condition in conditions_contrast1) {
         conditions = c(condition, "Untreated"),
         log2FCthr = c(-0.58, 0.58),
         pvalThr = 0.05,
-        outputDir = output_dir)
+        outputDir = outputDir)
 
 }
 
@@ -100,7 +100,7 @@ for (condition in conditions_contrast2) {
         conditions = c(condition, "M1"),
         log2FCthr = c(-0.58, 0.58),
         pvalThr = 0.05,
-        outputDir = output_dir)
+        outputDir = outputDir)
 
 }
 

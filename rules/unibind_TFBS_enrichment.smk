@@ -3,12 +3,10 @@ rule get_unibind_TFBS_enrichment_repo:
     Clone the git repository with the UniBind TFBS enrichment tool.
     """
     output:
-        unibind_enrichment_script = os.path.join(config["scripts_dir"], "unibind_enrichment", "bin", "UniBind_enrich.sh")
+        repository_cloned_flag_file = touch(os.path.join(config["scripts_dir"], "unibind_repository_cloned_flag_file"))
     params:
         clone_dir = os.path.join(config["scripts_dir"])
     threads: 1
-    log:
-        os.path.join(config["logs_dir"], "unibind_TFBS_enrichment", "get_repo.log")
     benchmark:
         os.path.join(config["benchmarks_dir"], "unibind_TFBS_enrichment", "get_repo.txt")
     shell:
@@ -20,6 +18,8 @@ rule get_unibind_TFBS_enrichment_repo:
 rule get_LOLA_database_for_unibind_enrichment:
     """
     """
+    input:
+        rules.get_unibind_TFBS_enrichment_repo.output.repository_cloned_flag_file
     output:
         lola_db = os.path.join(config["data_dir"], "unibind_TFBS_enrichment", "hg38_robust_UniBind_LOLA.RDS")
     params:
@@ -31,16 +31,17 @@ rule get_LOLA_database_for_unibind_enrichment:
         os.path.join(config["benchmarks_dir"], "unibind_TFBS_enrichment", "get_LOLA_db.txt")
     shell:
         """
-        {params.zenodo_fetch_script} \
-            4704641 \
-            -f hg38_robust_UniBind_LOLA.RDS
+        wget \
+            -O {output.lola_db} \
+            https://zenodo.org/api/records/4704641/files/hg38_robust_UniBind_LOLA.RDS/content \
+        2> {log}
         """
 
 rule get_chrom_sizes:
     """
     """
     input:
-        genome_fasta = rules.genome_fasta.output.genome_fasta
+        genome_fasta = rules.get_genome.output.genome_fasta
     output:
         chrom_sizes = os.path.join(config["data_dir"], "genome", "hg38.chromsizes")
     threads: 1
@@ -53,7 +54,8 @@ rule get_chrom_sizes:
     shell:
         """
         samtools faidx {input.genome_fasta}
-        cut -f1,2 {input.genome_fasta}.fai > {output.chrom_sizes}
+        cut -f1,2 {input.genome_fasta}.fai > {output.chrom_sizes} \
+        2> {log}
         """
 
 rule prepare_TSS_annotations:
@@ -79,7 +81,8 @@ rule prepare_TSS_annotations:
         bash {params.prepare_TSS_annotations_script} \
             {input.raw_TSS_annotations} \
             {input.chrom_sizes} \
-            {params.output_dir}
+            {params.output_dir} \
+        2> {log}
         """
 
 rule prepare_symbol2entrez_mapping:
@@ -96,11 +99,14 @@ rule prepare_symbol2entrez_mapping:
         os.path.join(config["logs_dir"], "unibind_TFBS_enrichment", "prepare_symbol_to_entrez_mapping.log")
     benchmark:
         os.path.join(config["benchmarks_dir"], "unibind_TFBS_enrichment", "prepare_symbol_to_entrez_mapping.txt")
+    conda:
+        "../envs/downstream.yaml"
     shell:
         """
         Rscript {params.mapping_script} \
             -i {input.DEGs} \
-            -o {output.mapping}
+            -o {output.mapping} \
+        2> {log}
         """
 
 rule generate_background:
@@ -120,13 +126,16 @@ rule generate_background:
         os.path.join(config["logs_dir"], "unibind_TFBS_enrichment", "generate_background.log")
     benchmark:
         os.path.join(config["benchmarks_dir"], "unibind_TFBS_enrichment", "generate_background.txt")
+    conda:
+        "../envs/downstream.yaml"
     shell:
         """
         Rscript {params.generate_background_script} \
             -i {input.DEGs} \
             -b {input.TSS_annotations} \
             -m {input.symbol2entrez_mapping} \
-            -o {params.output_dir}
+            -o {params.output_dir} \
+        2> {log}
         """
 
 rule generate_foreground:
@@ -137,7 +146,7 @@ rule generate_foreground:
         background_file = rules.generate_background.output.background_file,
         symbol2entrez_mapping = rules.prepare_symbol2entrez_mapping.output.mapping
     output:
-        expand(os.path.join(config["output_dir"], "unibind_enrichment", "{comparison}", "foreground_{deg_subset}.bed"), deg_subset = ["all", "upregulated", "downregulated"])
+        foreground_file = expand(os.path.join(config["output_dir"], "unibind_enrichment", "{{comparison}}", "foreground_{deg_subset}.bed"), deg_subset = ["all", "upregulated", "downregulated"])
     params:
         generate_foreground_script = os.path.join(config["scripts_dir"], "prepare_foreground.R"),
         output_dir = os.path.join(config["output_dir"], "unibind_enrichment", "{comparison}")
@@ -146,13 +155,16 @@ rule generate_foreground:
         os.path.join(config["logs_dir"], "unibind_TFBS_enrichment", "generate_foreground_{comparison}.log")
     benchmark:
         os.path.join(config["benchmarks_dir"], "unibind_TFBS_enrichment", "generate_foreground_{comparison}.txt")
+    conda:
+        "../envs/downstream.yaml"
     shell:
         """
         Rscript {params.generate_foreground_script} \
             -i {input.DEGs} \
             -b {input.background_file} \
             -m {input.symbol2entrez_mapping} \
-            -o {params.output_dir}
+            -o {params.output_dir} \
+        2> {log}
         """
 
 rule TFBS_enrichment:
@@ -160,15 +172,16 @@ rule TFBS_enrichment:
     Run the UniBind TFBS enrichment analysis for each comparison's DEGs.
     """
     input:
-        enrichment_script = rules.get_unibind_TFBS_enrichment_repo.output.unibind_enrichment_script,
+        repository_cloned_flag_file = rules.get_unibind_TFBS_enrichment_repo.output.repository_cloned_flag_file,
         lola_db = rules.get_LOLA_database_for_unibind_enrichment.output.lola_db,
-        foreground_file = rules.generate_foreground.output.foreground_file,
+        foreground_file = os.path.join(config["output_dir"], "unibind_enrichment", "{comparison}", "foreground_{deg_subset}.bed"),
         background_file = rules.generate_background.output.background_file,
-        DEA = get_comparisons
+        DEA = os.path.join(config["output_dir"], "downstream_analysis", "DEA", "{comparison}", "DEA_results.tsv")
     output:
         enrichment_results = os.path.join(config["output_dir"], "unibind_enrichment", "{comparison}", "{deg_subset}", "allEnrichments.tsv")
     params:
-        output_dir = os.path.join(config["output_dir"], "unibind_enrichment", "{comparison}", "{deg_subset}")
+        output_dir = os.path.join(config["output_dir"], "unibind_enrichment", "{comparison}", "{deg_subset}"),
+        enrichment_script = os.path.join(config["scripts_dir"], "unibind_enrichment", "bin", "UniBind_enrich.sh")
     threads: 1
     log:
         os.path.join(config["logs_dir"], "unibind_TFBS_enrichment", "{comparison}_{deg_subset}_enrichment.log")
@@ -178,12 +191,20 @@ rule TFBS_enrichment:
         "docker://cbgr/unibind_enrichment:0.2"
     shell:
         """
-        {params.enrichment_script} \
-            oneSetBg \
-            {input.lola_db} \
-            {input.foreground_file} \
-            {input.background_file} \
-            {params.output_dir}
+        n_TSSs=$(wc -l {input.foreground_file} | awk '{{print $1}}')
+
+        if [ $n_TSSs -eq 0 ] ; then
+            echo "userSet\tdbSet\tcollection\tpValueLog\toddsRatio\tsupport\trnkPV\trnkOR\trnkSup\tmaxRnk\tmeanRnk\tb\tc\td\tdescription\tcellType\ttissue\tantibody\ttreatment\tdataSource\tfilename\tsize\n" \
+            > {output.enrichment_results}
+        else 
+            {params.enrichment_script} \
+                oneSetBg \
+                {input.lola_db} \
+                {input.foreground_file} \
+                {input.background_file} \
+                {params.output_dir} \
+            2> {log}
+        fi
         """
 
 def aggregate_enrichment_results(wildcards):
@@ -200,7 +221,7 @@ def aggregate_enrichment_results(wildcards):
                 checkpoint_output,
                 "{comparison}",
                 "DEA_results.tsv")).comparison,
-        , deg_subset = ["all", "upregulated", "downregulated"]
+            deg_subset = ["all", "upregulated", "downregulated"]
     )
     return out
 
@@ -210,31 +231,28 @@ rule generate_TFBS_enrichment_summary_plots:
     input:
         aggregate_enrichment_results
     output:
-        summary_plots = expand(os.path.join(config["output_dir"], "unibind_enrichment", "summary_plots", "{deg_subset}", "summary_dotplot_all.pdf"), deg_subset = ["all", "upregulated", "downregulated"]),
-        upset_plots = expand(os.path.join(config["output_dir"], "unibind_enrichment", "upset_plots", "{deg_subset}", "upset_plot_all_comparisons.pdf"), deg_subset = ["all", "upregulated", "downregulated"])
+        summary_plot = os.path.join(config["output_dir"], "unibind_enrichment", "summary_plots", "{deg_subset}", "summary_dotplot_all.pdf"),
+        upset_plot = os.path.join(config["output_dir"], "unibind_enrichment", "upset_plots", "{deg_subset}", "upset_plot_all_comparisons.pdf")
     params:
-        TFBS_enrichment_summary_plot = os.path.join(config["scripts_dir"], "TFBS_enrichment_summary.R"),
+        TFBS_enrichment_summary_plot_script = os.path.join(config["scripts_dir"], "TFBS_enrichment_summary.R"),
+        TFBS_enrichment_upset_plot_script = os.path.join(config["scripts_dir"], "TFBS_enrichment_summary.R"),
         input_dir = os.path.join(config["output_dir"], "unibind_enrichment", "{deg_subset}"),
         summary_output_dir = os.path.join(config["output_dir"], "unibind_enrichment", "summary_plots"),
         upset_plots_output_dir = os.path.join(config["output_dir"], "unibind_enrichment", "summary_plots")
     threads: 1
     log:
-        os.path.join(config["logs_dir"], "unibind_TFBS_enrichment", "TFBS_summary_plots_{comparison}_{deg_subset}.log")
+        os.path.join(config["logs_dir"], "unibind_TFBS_enrichment", "TFBS_summary_plots_{deg_subset}.log")
     benchmark:
-        os.path.join(config["benchmarks_dir"], "unibind_TFBS_enrichment", "TFBS_summary_plots_{comparison}_{deg_subset}.txt")
+        os.path.join(config["benchmarks_dir"], "unibind_TFBS_enrichment", "TFBS_summary_plots_{deg_subset}.txt")
     shell:
         """
-        for comparison in all downregulated upregulated; do
-            
-            Rscript {params.TFBS_enrichment_summary_plot} \
+        Rscript {params.TFBS_enrichment_summary_plot_script} \
                 -i {params.input_dir} \
-                -c $comparison \
+                -c {wildcards.deg_subset} \
                 -o {params.summary_output_dir}/$comparison/
 
-            Rscript {params.TFBS_enrichment_upset_plot} \
-                -i {params.input_dir} \
-                -c $comparison \
-                -o {params.upset_plots_output_dir}/$comparison/
-
-        done
+        Rscript {params.TFBS_enrichment_upset_plot_script} \
+            -i {params.input_dir} \
+            -c {wildcards.deg_subset} \
+            -o {params.upset_plots_output_dir}/$comparison/
         """
